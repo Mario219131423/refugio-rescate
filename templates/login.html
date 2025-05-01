@@ -8,12 +8,55 @@
 <body>
     <div class="container">
         <h2>Iniciar Sesión</h2>
-        <form method="POST">
-            <input type="email" name="correo" placeholder="Correo" required>
-            <input type="password" name="password" placeholder="Contraseña" required>
+        <form method="POST" id="loginForm" onsubmit="return validarFormulario()">
+            <div class="form-group">
+                <input type="email" name="correo" id="correo" placeholder="Correo" required>
+                <span class="error-message" id="correoError"></span>
+            </div>
+            
+            <div class="form-group">
+                <input type="password" name="password" id="password" placeholder="Contraseña" required>
+                <span class="error-message" id="passwordError"></span>
+            </div>
+            
             <button type="submit">Ingresar</button>
         </form>
-        <p>¿No tienes cuenta? <a href="{{ url_for('registro') }}">Regístrate aquí</a></p>  <!-- Enlace visible -->
+        <p>¿No tienes cuenta? <a href="{{ url_for('registro') }}">Regístrate aquí</a></p>
     </div>
+
+    <script>
+        function validarFormulario() {
+            let isValid = true;
+            const correo = document.getElementById('correo');
+            const password = document.getElementById('password');
+
+            // Validar correo
+            if (!correo.value.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+                document.getElementById('correoError').textContent = 'Por favor, ingrese un correo válido';
+                correo.classList.add('error-shake');
+                isValid = false;
+            } else {
+                document.getElementById('correoError').textContent = '';
+                correo.classList.remove('error-shake');
+            }
+
+            // Validar contraseña
+            if (password.value.length < 8) {
+                document.getElementById('passwordError').textContent = 'La contraseña debe tener al menos 8 caracteres';
+                password.classList.add('error-shake');
+                isValid = false;
+            } else {
+                document.getElementById('passwordError').textContent = '';
+                password.classList.remove('error-shake');
+            }
+
+            return isValid;
+        }
+
+        // Validación en tiempo real
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('input', validarFormulario);
+        });
+    </script>
 </body>
 </html>

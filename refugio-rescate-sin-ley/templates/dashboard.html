@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        #mapa {
+            height: 400px;
+            width: 100%;
+            border: 1px solid #ccc;
+            margin-bottom: 20px;
+        }
+        form {
+            margin-top: 20px;
+        }
+        input, textarea {
+            display: block;
+            margin: 10px 0;
+            padding: 5px;
+            width: 100%;
+        }
+        button {
+            padding: 10px;
+            background: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        .btn-logout {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px;
+            background: #dc3545;
+            color: white;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Mapa de Refugios</h1>
+    <div id="mapa"></div>
+    
+    <h3>Agregar Refugio</h3>
+    <form method="POST" action="{{ url_for('agregar_refugio') }}">
+        <input type="text" name="nombre" placeholder="Nombre del refugio" required>
+        <input type="text" name="latitud" placeholder="Latitud (ejemplo: 4.5709)" required>
+        <input type="text" name="longitud" placeholder="Longitud (ejemplo: -74.2973)" required>
+        <input type="text" name="contacto" placeholder="Número de contacto" required>
+        <textarea name="descripcion" placeholder="Descripción del refugio"></textarea>
+        <button type="submit">Agregar Refugio</button>
+    </form>
+
+    <a href="{{ url_for('logout') }}" class="btn-logout">Cerrar sesión</a>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Mapa básico
+        const map = L.map('mapa').setView([4.5709, -74.2973], 6);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+        // Cargar refugios
+        fetch('/api/refugios')
+            .then(response => response.json())
+            .then(data => {
+                data.forEach(refugio => {
+                    L.marker([refugio.latitud, refugio.longitud])
+                        .addTo(map)
+                        .bindPopup(`
+                            <b>${refugio.nombre}</b><br>
+                            Contacto: ${refugio.contacto}<br>
+                            ${refugio.descripcion || ''}
+                        `);
+                });
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+    </script>
+</body>
+</html> 

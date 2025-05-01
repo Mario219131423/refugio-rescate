@@ -8,13 +8,83 @@
 <body>
     <div class="container">
         <h2>Registro de Usuario</h2>
-        <form method="POST">
-            <input type="text" name="nombre" placeholder="Nombre" required>
-            <input type="email" name="correo" placeholder="Correo" required>
-            <input type="password" name="password" placeholder="Contraseña" required>
+        <form method="POST" id="registroForm" onsubmit="return validarFormulario()">
+            <div class="form-group">
+                <input type="text" name="nombre" id="nombre" placeholder="Nombre" required 
+                       pattern="[A-Za-z\s]{2,50}" title="Solo letras y espacios (2-50 caracteres)">
+                <span class="error-message" id="nombreError"></span>
+            </div>
+            
+            <div class="form-group">
+                <input type="email" name="correo" id="correo" placeholder="Correo" required>
+                <span class="error-message" id="correoError"></span>
+            </div>
+            
+            <div class="form-group">
+                <input type="password" name="password" id="password" placeholder="Contraseña" required
+                       pattern="^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$" 
+                       title="Mínimo 8 caracteres, al menos una letra y un número">
+                <span class="error-message" id="passwordError"></span>
+            </div>
+            
+            <div class="form-group">
+                <input type="password" name="confirmPassword" id="confirmPassword" 
+                       placeholder="Confirmar Contraseña" required>
+                <span class="error-message" id="confirmPasswordError"></span>
+            </div>
+            
             <button type="submit">Registrarse</button>
         </form>
-        <p>¿Ya tienes cuenta? <a href="{{ url_for('login') }}">Inicia sesión</a></p> 
+        <p>¿Ya tienes cuenta? <a href="{{ url_for('login') }}">Inicia sesión</a></p>
     </div>
+
+    <script>
+        function validarFormulario() {
+            let isValid = true;
+            const nombre = document.getElementById('nombre');
+            const correo = document.getElementById('correo');
+            const password = document.getElementById('password');
+            const confirmPassword = document.getElementById('confirmPassword');
+
+            // Validar nombre
+            if (!nombre.value.match(/^[A-Za-z\s]{2,50}$/)) {
+                document.getElementById('nombreError').textContent = 'El nombre debe contener solo letras y espacios (2-50 caracteres)';
+                isValid = false;
+            } else {
+                document.getElementById('nombreError').textContent = '';
+            }
+
+            // Validar correo
+            if (!correo.value.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+                document.getElementById('correoError').textContent = 'Por favor, ingrese un correo válido';
+                isValid = false;
+            } else {
+                document.getElementById('correoError').textContent = '';
+            }
+
+            // Validar contraseña
+            if (!password.value.match(/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/)) {
+                document.getElementById('passwordError').textContent = 'La contraseña debe tener al menos 8 caracteres, una letra y un número';
+                isValid = false;
+            } else {
+                document.getElementById('passwordError').textContent = '';
+            }
+
+            // Validar confirmación de contraseña
+            if (password.value !== confirmPassword.value) {
+                document.getElementById('confirmPasswordError').textContent = 'Las contraseñas no coinciden';
+                isValid = false;
+            } else {
+                document.getElementById('confirmPasswordError').textContent = '';
+            }
+
+            return isValid;
+        }
+
+        // Validación en tiempo real
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('input', validarFormulario);
+        });
+    </script>
 </body>
 </html>

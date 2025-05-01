@@ -15,24 +15,141 @@
             border-radius: 8px;
             border: 1px solid #ccc;
         }
+        .form-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .form-instructions {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 15px;
+        }
+        .coordinates-display {
+            background: #e9ecef;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-family: monospace;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Mapa de Refugios</h1>
-        <div id="mapa" style="height: 500px; width: 100%;"></div>
-        <h3>Agregar Refugio</h3>
-        <form method="POST" action="{{ url_for('agregar_refugio') }}">
-            <input type="text" name="nombre" placeholder="Nombre" required>
-            <input type="text" name="latitud" placeholder="Latitud" required>
-            <input type="text" name="longitud" placeholder="Longitud" required>
-            <input type="text" name="contacto" placeholder="Contacto" required>
-            <input type="text" name="descripcion" placeholder="Descripción" required>
-            <button type="submit">Agregar</button>
-        </form>
+        <div id="mapa"></div>
+        
+        <div class="form-section">
+            <h3>Agregar Refugio</h3>
+            <p class="form-instructions">
+                Haz clic en el mapa para seleccionar la ubicación del refugio. 
+                Las coordenadas se completarán automáticamente.
+            </p>
+            
+            <form method="POST" action="{{ url_for('agregar_refugio') }}" id="refugioForm" onsubmit="return validarFormulario()">
+                <div class="form-group">
+                    <input type="text" name="nombre" id="nombre" placeholder="Nombre del refugio" required
+                           pattern="[A-Za-z0-9\s]{3,50}" 
+                           title="3-50 caracteres, solo letras, números y espacios">
+                    <span class="error-message" id="nombreError"></span>
+                </div>
+                
+                <div class="form-group">
+                    <input type="tel" name="contacto" id="contacto" placeholder="Número de contacto" required
+                           pattern="[0-9+\s-]{7,15}" 
+                           title="7-15 dígitos, puede incluir +, - y espacios">
+                    <span class="error-message" id="contactoError"></span>
+                </div>
+                
+                <div class="coordinates-display">
+                    <div class="form-group">
+                        <label>Latitud:</label>
+                        <input type="number" name="latitud" id="latitud" step="0.000001" required readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Longitud:</label>
+                        <input type="number" name="longitud" id="longitud" step="0.000001" required readonly>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <textarea name="descripcion" id="descripcion" placeholder="Descripción del refugio" 
+                              maxlength="500" rows="3"></textarea>
+                    <small class="char-count">0/500 caracteres</small>
+                </div>
+                
+                <button type="submit">Agregar Refugio</button>
+            </form>
+        </div>
+        
         <a href="{{ url_for('logout') }}" class="btn-logout">Cerrar sesión</a>
     </div>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>    
+    
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" 
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" 
+            crossorigin=""></script>    
     <script src="{{ url_for('static', filename='js/map.js') }}"></script>
+    
+    <script>
+        // Validación del formulario
+        function validarFormulario() {
+            let isValid = true;
+            const nombre = document.getElementById('nombre');
+            const contacto = document.getElementById('contacto');
+            const latitud = document.getElementById('latitud');
+            const longitud = document.getElementById('longitud');
+            
+            // Validar nombre
+            if (!nombre.value.match(/^[A-Za-z0-9\s]{3,50}$/)) {
+                document.getElementById('nombreError').textContent = 
+                    'El nombre debe tener entre 3 y 50 caracteres (solo letras, números y espacios)';
+                nombre.classList.add('error-shake');
+                isValid = false;
+            } else {
+                document.getElementById('nombreError').textContent = '';
+                nombre.classList.remove('error-shake');
+            }
+            
+            // Validar contacto
+            if (!contacto.value.match(/^[0-9+\s-]{7,15}$/)) {
+                document.getElementById('contactoError').textContent = 
+                    'Ingrese un número de contacto válido (7-15 dígitos)';
+                contacto.classList.add('error-shake');
+                isValid = false;
+            } else {
+                document.getElementById('contactoError').textContent = '';
+                contacto.classList.remove('error-shake');
+            }
+            
+            // Validar coordenadas
+            if (!latitud.value || !longitud.value) {
+                alert('Por favor, seleccione una ubicación en el mapa');
+                isValid = false;
+            }
+            
+            return isValid;
+        }
+        
+        // Contador de caracteres para la descripción
+        const descripcion = document.getElementById('descripcion');
+        const charCount = document.querySelector('.char-count');
+        
+        descripcion.addEventListener('input', function() {
+            const remaining = this.value.length;
+            charCount.textContent = `${remaining}/500 caracteres`;
+            
+            if (remaining > 450) {
+                charCount.style.color = '#dc3545';
+            } else {
+                charCount.style.color = '#666';
+            }
+        });
+        
+        // Validación en tiempo real
+        document.querySelectorAll('input, textarea').forEach(input => {
+            input.addEventListener('input', validarFormulario);
+        });
+    </script>
 </body>
 </html>

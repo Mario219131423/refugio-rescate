@@ -12,6 +12,9 @@ document.addEventListener('DOMContentLoaded', function() {
         popupAnchor: [0, -35]
     });
 
+    let selectedMarker = null;
+
+    // Cargar refugios existentes
     fetch('/api/refugios')
         .then(response => {
             if (!response.ok) throw new Error('Error en la respuesta de la API');
@@ -19,13 +22,11 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .then(data => {
             data.forEach(refugio => {
-                // Crear marcador para cada refugio
                 const marker = L.marker(
                     [refugio.latitud, refugio.longitud], 
                     { icon: customIcon }
                 ).addTo(map);
                 
-                // Popup con información del refugio
                 marker.bindPopup(`
                     <div style="font-family: Arial, sans-serif; max-width: 250px;">
                         <h3 style="margin: 5px 0; color: #2c3e50;">${refugio.nombre}</h3>
@@ -37,34 +38,55 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                 `);
 
-                // Evento para hacer zoom al hacer clic en el marcador (solicitado)
                 marker.on('click', function() {
-                    map.setView(marker.getLatLng(), 12);  // Zoom más cercano
+                    map.setView(marker.getLatLng(), 12);
                 });
             });
         })
         .catch(error => {
             console.error('Error al cargar refugios:', error);
-            // Marcador de ejemplo si falla la API
             L.marker([4.5709, -74.2973])
                 .addTo(map)
                 .bindPopup('<b>Refugio de ejemplo</b><br>Prueba de funcionalidad');
         });
 
+    // Manejar clic en el mapa para seleccionar ubicación
     map.on('click', function(e) {
         const coords = e.latlng;
-        // Actualiza los campos del formulario (asegúrate de que existan en tu HTML)
-        if (document.getElementById('latitude')) {
-            document.getElementById('latitude').value = coords.lat.toFixed(6);
-        }
-        if (document.getElementById('longitude')) {
-            document.getElementById('longitude').value = coords.lng.toFixed(6);
+        
+        // Actualizar campos de coordenadas
+        document.getElementById('latitud').value = coords.lat.toFixed(6);
+        document.getElementById('longitud').value = coords.lng.toFixed(6);
+        
+        // Actualizar marcador de selección
+        if (selectedMarker) {
+            map.removeLayer(selectedMarker);
         }
         
-        // Opcional: Mostrar coordenadas en consola
-        console.log('Coordenadas click:', coords.lat.toFixed(6), coords.lng.toFixed(6));
+        selectedMarker = L.marker(coords, {
+            icon: L.divIcon({
+                className: 'selected-location-marker',
+                html: '<div style="background-color: #007bff; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.3);"></div>',
+                iconSize: [20, 20],
+                iconAnchor: [10, 10]
+            })
+        }).addTo(map);
+        
+        // Hacer zoom a la ubicación seleccionada
+        map.setView(coords, 12);
+        
+        // Mostrar mensaje de confirmación
+        const popup = L.popup()
+            .setLatLng(coords)
+            .setContent('Ubicación seleccionada')
+            .openOn(map);
+            
+        setTimeout(() => {
+            map.closePopup(popup);
+        }, 2000);
     });
 
+    // Ajustar tamaño del mapa
     setTimeout(() => {
         map.invalidateSize();
     }, 100);
